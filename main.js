@@ -29,24 +29,27 @@ var ambientLight = new THREE.AmbientLight( 0x000000 );
 scene.add( ambientLight );
 
 var lights = [];
-lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-
-lights[ 0 ].position.set( 0, 200, 0 );
-lights[ 1 ].position.set( 100, 200, 100 );
-lights[ 2 ].position.set( - 100, - 200, - 100 );
-
-scene.add( lights[ 0 ] );
-scene.add( lights[ 1 ] );
-scene.add( lights[ 2 ] );
+var light_markers = [];
+for (var i = 0; i < 1; i++) {
+    lights[i] = new THREE.PointLight(0xffffff, 1, 0);
+    lights[i].position.set( 0, 300, 0 );
+    scene.add(lights[i]);
+    light_markers[i] = new THREE.Mesh(
+        new THREE.SphereGeometry(4,5,5),
+        new THREE.MeshBasicMaterial({ color: 0xffff00 })
+    );
+    scene.add(light_markers[i]);
+    lights[i].marker = light_markers[i];
+}
 
 var N = 801;
 var W = 32;
 
-var geometry = new RevolutionBufferGeometry(1, 32, 32, s => [
-    20 * Math.cos(Math.PI * s) + 2 * Math.cos(Math.PI * 10 * s), 
-    20 * Math.sin(Math.PI * s) - 2 * Math.sin(Math.PI * 10 * s)
+var geometry = new RevolutionBufferGeometry(1, 64, 64, s => [
+    //20 * Math.cos(Math.PI * s) + 2 * Math.cos(Math.PI * 10 * s), 
+    //20 * Math.sin(Math.PI * s)
+    20 * Math.cos(Math.PI*s),
+    20 * Math.sin(Math.PI*s) + 2 * Math.sin(Math.PI*s*10)
 ]);
 
 geometry.dynamic = true;
@@ -65,14 +68,24 @@ function render() {
 }
 
 function animate() {
-  frame++;
-	requestAnimationFrame( animate );
-  controls.update();
+    frame++;
+    requestAnimationFrame( animate );
+    controls.update();
+    for (var light of lights) {
+        var delta = new THREE.Vector3(
+            20 * Math.random() - 10,
+            20 * Math.random() - 10,
+            20 * Math.random() - 10
+        );
+        light.position.add(delta)
+                      .normalize()
+                      .multiplyScalar(300);
 
-  //torus.rotation.x += 0.01;
-  //torus.rotation.y += 0.1;
-  //render();
-  //if (frame == 5) window.open(renderer.domElement.toDataURL("image/png"), 'DNA_Screen');
+        light.marker.position.set(light.position.x,
+            light.position.y,
+            light.position.z);
+        light.marker.position.multiplyScalar(0.3);
+    }
+    render();
 }
 animate();
-render();

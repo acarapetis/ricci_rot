@@ -43,11 +43,8 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
 
 		this.groupCount = 0;
 
-		// this will be used to calculate the normal
-		var slope = 1;
-
 		// generate vertices, normals and uvs
-
+        var prev_coords = [0,0];
 		for ( y = 0; y <= this.heightSegments; y ++ ) {
 
 			var indexRow = [];
@@ -77,7 +74,14 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
 
 				// normal
 
-				normal.set( sinTheta, slope, cosTheta ).normalize();
+                if (y == 0) {
+                    normal.set(0,-1,0);
+                } else {
+                    var dx = coords[0] - prev_coords[0],
+                        dy = coords[1] - prev_coords[1];
+                    normal.set(-dx * sinTheta, dy, -dx * cosTheta);
+                }
+                normal.normalize();
 				normals.push( normal.x, normal.y, normal.z );
 
 				// uv
@@ -93,7 +97,7 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
 			// now save vertices of the row in our index array
 
 			indexArray.push( indexRow );
-
+            prev_coords = coords;
 		}
 
 		// generate indices
