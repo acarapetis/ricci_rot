@@ -1,27 +1,27 @@
 function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn) { 
 
-	THREE.BufferGeometry.call( this );
+    THREE.BufferGeometry.call( this );
 
-	this.type = 'RevolutionBufferGeometry';
+    this.type = 'RevolutionBufferGeometry';
 
-	this.parameters = {
-		height: height,
-		radialSegments: radialSegments,
-		heightSegments: heightSegments,
+    this.parameters = {
+        height: height,
+        radialSegments: radialSegments,
+        heightSegments: heightSegments,
         revFn: revFn,
-	};
+    };
 
-	var scope = this;
+    var scope = this;
 
-	height = height || 1;
+    height = height || 1;
 
-	this.radialSegments = Math.floor( radialSegments ) || 8;
-	this.heightSegments = Math.floor( heightSegments ) || 1;
+    this.radialSegments = Math.floor( radialSegments ) || 8;
+    this.heightSegments = Math.floor( heightSegments ) || 1;
     revFn = revFn || function(x) { return 1; };
 
-	openEnded = true;
-	thetaStart = 0.0;
-	thetaLength = Math.PI * 2;
+    openEnded = true;
+    thetaStart = 0.0;
+    thetaLength = Math.PI * 2;
 
 
     this.updateRevFn = function(rfn) {
@@ -30,8 +30,8 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
         this.attributes.normal.needsUpdate = true;
     };
 
-	// generate geometry
-	this.generateTorso = function(rfn, update) {
+    // generate geometry
+    this.generateTorso = function(rfn, update) {
         // buffers
         var indices = [];
         var vertices = [];
@@ -43,39 +43,39 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
         var indexArray = [];
         var halfHeight = height / 2;
         var groupStart = 0;
-		var x, y;
-		var normal = new THREE.Vector3();
-		var vertex = new THREE.Vector3();
+        var x, y;
+        var normal = new THREE.Vector3();
+        var vertex = new THREE.Vector3();
 
-		this.groupCount = 0;
+        this.groupCount = 0;
 
-		// generate vertices, normals and uvs
+        // generate vertices, normals and uvs
         var prev_coords = [0,0];
-		for ( y = 0; y <= this.heightSegments; y ++ ) {
+        for ( y = 0; y <= this.heightSegments; y ++ ) {
 
-			var indexRow = [];
+            var indexRow = [];
 
-			var v = y / this.heightSegments;
+            var v = y / this.heightSegments;
 
-			// calculate the radius of the current row
+            // calculate the radius of the current row
 
-			var coords = rfn(v);
+            var coords = rfn(v);
             var xx = coords[0], radius = coords[1];
 
-			for ( x = 0; x <= this.radialSegments; x ++ ) {
+            for ( x = 0; x <= this.radialSegments; x ++ ) {
 
-				var u = x / this.radialSegments;
+                var u = x / this.radialSegments;
 
-				var theta = u * thetaLength + thetaStart;
+                var theta = u * thetaLength + thetaStart;
 
-				var sinTheta = Math.sin( theta );
-				var cosTheta = Math.cos( theta );
+                var sinTheta = Math.sin( theta );
+                var cosTheta = Math.cos( theta );
 
-				// vertex
+                // vertex
 
-				vertex.x = radius * sinTheta;
-				vertex.y = xx;
-				vertex.z = radius * cosTheta;
+                vertex.x = radius * sinTheta;
+                vertex.y = xx;
+                vertex.z = radius * cosTheta;
                 if (update) {
                     var pos = this.attributes.position.array;
                     pos[3*index+0] = vertex.x;
@@ -85,7 +85,7 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
                     vertices.push( vertex.x, vertex.y, vertex.z );
                 }
 
-				// normal
+                // normal
 
                 if (y == 0) {
                     normal.set(0,-1,0);
@@ -104,21 +104,21 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
                     normals.push( normal.x, normal.y, normal.z );
                 }
 
-				// uv
+                // uv
 
-				uvs.push( u, 1 - v );
+                uvs.push( u, 1 - v );
 
-				// save index of vertex in respective row
+                // save index of vertex in respective row
 
-				indexRow.push( index ++ );
+                indexRow.push( index ++ );
 
-			}
+            }
 
-			// now save vertices of the row in our index array
+            // now save vertices of the row in our index array
 
-			indexArray.push( indexRow );
+            indexArray.push( indexRow );
             prev_coords = coords;
-		}
+        }
 
         if (!update) {
             // generate indices
@@ -158,8 +158,8 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
             this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
             this.addAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
         }
-	};
-	this.generateTorso(revFn);
+    };
+    this.generateTorso(revFn);
 }
 
 RevolutionBufferGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
