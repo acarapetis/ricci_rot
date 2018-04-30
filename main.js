@@ -1,4 +1,5 @@
 'use strict';
+'import test.js';
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 var controls = new THREE.TrackballControls( camera );
@@ -28,28 +29,26 @@ controls.addEventListener( 'change', render );
 var ambientLight = new THREE.AmbientLight( 0x333333 );
 scene.add( ambientLight );
 
+var lpos = [
+    [100, 250, 100],
+    [250, -100, 100],
+    [100, 100, -250]
+];
 var lights = [];
-var light_markers = [];
-for (var i = 0; i < 1; i++) {
-    lights[i] = new THREE.PointLight(0xffffff, 1, 0);
-    lights[i].position.set( 100, 250, 100 );
+for (var i = 0; i < lpos.length; i++) {
+    lights[i] = new THREE.PointLight(0x666666, 1, 0);
+    lights[i].position.set(lpos[i][0], lpos[i][1], lpos[i][2]);
     scene.add(lights[i]);
-    light_markers[i] = new THREE.Mesh(
-        new THREE.SphereGeometry(4,5,5),
-        new THREE.MeshBasicMaterial({ color: 0xffff00 })
-    );
-    scene.add(light_markers[i]);
-    lights[i].marker = light_markers[i];
 }
 
-var N = 801;
+var N = Module._resolution() - 1;
 var W = 32;
 
-var geometry = new RevolutionBufferGeometry(1, 128, 256, s => [
+var geometry = new RevolutionBufferGeometry(1, W, N, s => [
     //20 * Math.cos(Math.PI * s) + 2 * Math.cos(Math.PI * 10 * s), 
     //20 * Math.sin(Math.PI * s)
-    20 * Math.cos(Math.PI*s),
-    20 * Math.sin(Math.PI*s) + 2 * Math.sin(Math.PI*s*10)
+    20 * Math.cos(Math.PI*s/N),
+    20 * Math.sin(Math.PI*s/N) + 2 * Math.sin(Math.PI*s*10/N)
 ]);
 
 var sphere = function(s) {
@@ -58,7 +57,7 @@ var sphere = function(s) {
 
 geometry.dynamic = true;
 
-var material = new THREE.MeshPhongMaterial({ color: 0x99EEFF });
+var material = new THREE.MeshPhongMaterial({ color: 0xDDEEFF });
 var mesh = new THREE.Mesh( geometry, material );
 
 scene.add( mesh );
@@ -67,35 +66,49 @@ camera.position.y = -30;
 camera.position.z = 70;
 var frame = 0;
 
-function render() {
-	renderer.render( scene, camera );
+var x_ary = new Float64Array(Module.HEAPF64.buffer,
+                             Module._coord_x(),
+                             N * 8);
+var y_ary = new Float64Array(Module.HEAPF64.buffer,
+                             Module._coord_y(),
+                             N * 8);
+
+function update_mesh() {
+    geometry.updateRevFn(i => [
+        20*x_ary[i], 20*y_ary[i]
+    ]);
 }
 
-function animate() {
+function reset_shape(c3, c5) {
+    var result = Module._reset_shape(c3, c5);
+    update_mesh();
+}
+
+function render() {
+	renderer.render(scene, camera);
+}
+
+var old_t = false;
+var ok = false;
+function animate(t) {
+    if (!old_t) old_t = t - 16;
+    var dt = (t - old_t) * 0.000005;
+    if (dt > 0.0001) dt = 0.0001;
     frame++;
     requestAnimationFrame( animate );
     controls.update();
-    /*
-    for (var light of lights) {
-        var delta = new THREE.Vector3(
-            20 * Math.random() - 10,
-            20 * Math.random() - 10,
-            20 * Math.random() - 10
-        );
-        light.position.add(delta)
-                      .normalize()
-                      .multiplyScalar(300);
-
-        light.marker.position.set(light.position.x,
-            light.position.y,
-            light.position.z);
-        light.marker.position.multiplyScalar(0.3);
+    if (ok) Module._step(dt);
+    if (!Module._make_xy()) {
+        Module._undo_step();
+        ok = false;
     }
-    */
-    geometry.updateRevFn(s => [
-        20 * Math.cos(Math.PI*s),
-        20 * Math.sin(Math.PI*s) * (0.5+0.2*Math.sin(Math.PI*s*10 + performance.now()/1000))
-    ]);
+    update_mesh();
     render();
+    old_t = t;
 }
-animate();
+
+function em_ready() {
+    reset_shape(0.2,0.3);
+    requestAnimationFrame(animate);
+    ok = true;
+}

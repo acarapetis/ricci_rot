@@ -59,7 +59,7 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
 
             // calculate the radius of the current row
 
-            var coords = rfn(v);
+            var coords = rfn(y);
             var xx = coords[0], radius = coords[1];
 
             for ( x = 0; x <= this.radialSegments; x ++ ) {
