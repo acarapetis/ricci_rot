@@ -1,3 +1,7 @@
+// RevolutionGeometry.js
+// Definition of RevolutionBufferGeometry, which is a surface of revolution 
+// described by a profile function.
+// Adapted from three.js's native CylinderBufferGeometry.
 function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn) { 
 
     THREE.BufferGeometry.call( this );
