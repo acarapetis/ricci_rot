@@ -23,20 +23,26 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
 	thetaStart = 0.0;
 	thetaLength = Math.PI * 2;
 
-	// buffers
-	var indices = [];
-	var vertices = [];
-	var normals = [];
-	var uvs = [];
 
-	// helper variables
-	var index = 0;
-	var indexArray = [];
-	var halfHeight = height / 2;
-	var groupStart = 0;
+    this.updateRevFn = function(rfn) {
+        this.generateTorso(rfn, true);
+        this.attributes.position.needsUpdate = true;
+        this.attributes.normal.needsUpdate = true;
+    };
 
 	// generate geometry
-	this.generateTorso = function(rfn) {
+	this.generateTorso = function(rfn, update) {
+        // buffers
+        var indices = [];
+        var vertices = [];
+        var normals = [];
+        var uvs = [];
+
+        // helper variables
+        var index = 0;
+        var indexArray = [];
+        var halfHeight = height / 2;
+        var groupStart = 0;
 		var x, y;
 		var normal = new THREE.Vector3();
 		var vertex = new THREE.Vector3();
@@ -70,7 +76,14 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
 				vertex.x = radius * sinTheta;
 				vertex.y = xx;
 				vertex.z = radius * cosTheta;
-				vertices.push( vertex.x, vertex.y, vertex.z );
+                if (update) {
+                    var pos = this.attributes.position.array;
+                    pos[3*index+0] = vertex.x;
+                    pos[3*index+1] = vertex.y;
+                    pos[3*index+2] = vertex.z;
+                } else {
+                    vertices.push( vertex.x, vertex.y, vertex.z );
+                }
 
 				// normal
 
@@ -82,7 +95,14 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
                     normal.set(-dx * sinTheta, dy, -dx * cosTheta);
                 }
                 normal.normalize();
-				normals.push( normal.x, normal.y, normal.z );
+                if (update) {
+                    var nor = this.attributes.normal.array;
+                    nor[3*index+0] = normal.x;
+                    nor[3*index+1] = normal.y;
+                    nor[3*index+2] = normal.z;
+                } else {
+                    normals.push( normal.x, normal.y, normal.z );
+                }
 
 				// uv
 
@@ -100,44 +120,44 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
             prev_coords = coords;
 		}
 
-		// generate indices
+        if (!update) {
+            // generate indices
+            for ( x = 0; x < this.radialSegments; x ++ ) {
 
-		for ( x = 0; x < this.radialSegments; x ++ ) {
+                for ( y = 0; y < this.heightSegments; y ++ ) {
 
-			for ( y = 0; y < this.heightSegments; y ++ ) {
+                    // we use the index array to access the correct indices
 
-				// we use the index array to access the correct indices
+                    var a = indexArray[ y ][ x ];
+                    var b = indexArray[ y + 1 ][ x ];
+                    var c = indexArray[ y + 1 ][ x + 1 ];
+                    var d = indexArray[ y ][ x + 1 ];
 
-				var a = indexArray[ y ][ x ];
-				var b = indexArray[ y + 1 ][ x ];
-				var c = indexArray[ y + 1 ][ x + 1 ];
-				var d = indexArray[ y ][ x + 1 ];
+                    // faces
 
-				// faces
+                    indices.push( a, b, d );
+                    indices.push( b, c, d );
 
-				indices.push( a, b, d );
-				indices.push( b, c, d );
+                    // update group counter
 
-				// update group counter
+                    this.groupCount += 6;
 
-				this.groupCount += 6;
+                }
 
-			}
+            }
 
-		}
+            // add a group to the geometry. this will ensure multi material support
 
-		// add a group to the geometry. this will ensure multi material support
+            this.addGroup( this.groupStart, this.groupCount, 0 );
 
-		this.addGroup( this.groupStart, this.groupCount, 0 );
+            // calculate new start value for groups
 
-		// calculate new start value for groups
-
-		this.groupStart += this.groupCount;
-
-        this.setIndex( indices );
-        this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-        this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-        this.addAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+            this.groupStart += this.groupCount;
+            this.setIndex( indices );
+            this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+            this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+            this.addAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+        }
 	};
 	this.generateTorso(revFn);
 }

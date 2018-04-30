@@ -25,14 +25,14 @@ controls.keys = [ 65, 83, 68 ];
 
 controls.addEventListener( 'change', render );
 
-var ambientLight = new THREE.AmbientLight( 0x000000 );
+var ambientLight = new THREE.AmbientLight( 0x333333 );
 scene.add( ambientLight );
 
 var lights = [];
 var light_markers = [];
 for (var i = 0; i < 1; i++) {
     lights[i] = new THREE.PointLight(0xffffff, 1, 0);
-    lights[i].position.set( 0, 300, 0 );
+    lights[i].position.set( 100, 250, 100 );
     scene.add(lights[i]);
     light_markers[i] = new THREE.Mesh(
         new THREE.SphereGeometry(4,5,5),
@@ -45,16 +45,20 @@ for (var i = 0; i < 1; i++) {
 var N = 801;
 var W = 32;
 
-var geometry = new RevolutionBufferGeometry(1, 64, 64, s => [
+var geometry = new RevolutionBufferGeometry(1, 128, 256, s => [
     //20 * Math.cos(Math.PI * s) + 2 * Math.cos(Math.PI * 10 * s), 
     //20 * Math.sin(Math.PI * s)
     20 * Math.cos(Math.PI*s),
     20 * Math.sin(Math.PI*s) + 2 * Math.sin(Math.PI*s*10)
 ]);
 
+var sphere = function(s) {
+    return [ 20 * Math.cos(Math.PI*s), 20 * Math.sin(Math.PI*s) ];
+};
+
 geometry.dynamic = true;
 
-var material = new THREE.MeshPhongMaterial({ color: 0x2194CE });
+var material = new THREE.MeshPhongMaterial({ color: 0x99EEFF });
 var mesh = new THREE.Mesh( geometry, material );
 
 scene.add( mesh );
@@ -71,6 +75,7 @@ function animate() {
     frame++;
     requestAnimationFrame( animate );
     controls.update();
+    /*
     for (var light of lights) {
         var delta = new THREE.Vector3(
             20 * Math.random() - 10,
@@ -86,6 +91,11 @@ function animate() {
             light.position.z);
         light.marker.position.multiplyScalar(0.3);
     }
+    */
+    geometry.updateRevFn(s => [
+        20 * Math.cos(Math.PI*s),
+        20 * Math.sin(Math.PI*s) * (0.5+0.2*Math.sin(Math.PI*s*10 + performance.now()/1000))
+    ]);
     render();
 }
 animate();
