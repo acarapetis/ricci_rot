@@ -105,18 +105,16 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
                 }
 
                 // uv
-
-                uvs.push( u, 1 - v );
+                if (!update) uvs.push( u, 1 - v );
 
                 // save index of vertex in respective row
-
-                indexRow.push( index ++ );
-
+                if (!update) indexRow.push(index);
+                index++;
             }
 
             // now save vertices of the row in our index array
 
-            indexArray.push( indexRow );
+            if (!update) indexArray.push( indexRow );
             prev_coords = coords;
         }
 
@@ -127,9 +125,7 @@ function RevolutionBufferGeometry(height, radialSegments, heightSegments, revFn)
                 for ( y = 0; y < this.heightSegments; y ++ ) {
 
                     // we use the index array to access the correct indices
-
-                    var a = indexArray[ y ][ x ];
-                    var b = indexArray[ y + 1 ][ x ];
+var a = indexArray[ y ][ x ]; var b = indexArray[ y + 1 ][ x ];
                     var c = indexArray[ y + 1 ][ x + 1 ];
                     var d = indexArray[ y ][ x + 1 ];
 
